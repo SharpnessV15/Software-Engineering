@@ -18,11 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['role'] = $user['role'];
 
         if ($user['role'] == 'administrator') {
-            header('Location: admin_dashboard.php');
+            if (isset($_POST['password']) && $_POST['password'] == $user['password']) {
+                header('Location: admin_dashboard.php');
+            } else {
+                $error = "Invalid password for administrator.";
+            }
+        } elseif ($user['role'] == 'reader') {
+             if (isset($_POST['password']) && $_POST['password'] == $user['password']) {
+                 header('Location: reader_dashboard.php');
+             } else {
+                 $error = "Invalid password for reader.";
+             }
         } else {
             header('Location: user_dashboard.php');
         }
-        exit;
+        if (!isset($error)) exit;
     } else {
         $error = "Invalid registration number.";
     }
@@ -46,11 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <label for="registration_number" class="form-label">Registration Number</label>
                 <input type="text" id="registration_number" name="registration_number" class="form-control" required>
             </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password (Required for Admin & Reader)</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter password if Admin/Reader">
+            </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
-        <div class="text-center mt-3">
-            <a href="register.php" class="btn btn-link">Register</a>
-        </div>
     </div>
 </body>
 </html>

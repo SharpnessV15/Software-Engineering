@@ -41,8 +41,8 @@ CREATE TABLE `bills` (
 --
 
 INSERT INTO `bills` (`id`, `registration_number`, `units_used`, `bill_amount`, `bill_date`, `month`) VALUES
-(1, '1234', 150, 600.00, '2026-01-19', ''),
-(2, '1234', 123, 438.00, '2026-01-19', 'december 2025');
+(1, '1001', 150, 600.00, '2026-01-19', 'January 2026'),
+(2, '1001', 123, 438.00, '2026-01-19', 'December 2025');
 
 -- --------------------------------------------------------
 
@@ -53,20 +53,24 @@ INSERT INTO `bills` (`id`, `registration_number`, `units_used`, `bill_amount`, `
 CREATE TABLE `users` (
   `registration_number` varchar(50) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
   `dob` date NOT NULL,
   `connection_date` date NOT NULL,
   `address` text NOT NULL,
-  `role` enum('user','administrator') DEFAULT 'user'
+  `role` enum('user','administrator','reader') DEFAULT 'user',
+  `connection_type` enum('home','corporate','industrial','staff') DEFAULT 'home'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`registration_number`, `name`, `dob`, `connection_date`, `address`, `role`) VALUES
-('1111', 'shar', '2026-01-15', '2026-01-14', 'qwewqeq', 'administrator'),
-('1122', 'sad', '2025-12-30', '2026-01-13', 'sdqfafdaw', 'user'),
-('1234', 'vedang', '2026-01-14', '2026-01-13', 'g7 srs', 'user');
+INSERT INTO `users` (`registration_number`, `name`, `password`, `dob`, `connection_date`, `address`, `role`, `connection_type`) VALUES
+('admin', 'System Admin', 'admin123', '1990-01-01', '2020-01-01', 'HQ, Admin Block, City, State - 100001', 'administrator', 'staff'),
+('reader', 'Meter Reader', 'reader123', '1995-05-15', '2021-06-01', 'Substation 1, Ind Area, City, State - 100002', 'reader', 'staff'),
+('1001', 'Alice Home', NULL, '1985-08-20', '2023-01-10', '123, Rose St, Garden Town, State - 100003', 'user', 'home'),
+('1002', 'Bob Corp', NULL, '1980-03-12', '2023-02-15', '456, Biz Hub, Tech Park, State - 100004', 'user', 'corporate'),
+('1003', 'Charlie Factory', NULL, '1975-11-30', '2023-03-20', '789, Ind Zone, Factory Rd, State - 100005', 'user', 'industrial');
 
 --
 -- Indexes for dumped tables

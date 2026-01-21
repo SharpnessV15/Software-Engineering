@@ -7,32 +7,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != 'administrator') {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $registration_number = $_POST['registration_number'];
-    $units_used = $_POST['units_used'];
-    $month = $_POST['month'];
-
-    $bill_amount = 0;
-    if ($units_used <= 50) {
-        $bill_amount = $units_used * 2;
-    } elseif ($units_used <= 100) {
-        $bill_amount = (50 * 2) + (($units_used - 50) * 4);
-    } else {
-        $bill_amount = (50 * 2) + (50 * 4) + (($units_used - 100) * 6);
-    }
-
-    $bill_date = date('Y-m-d');
-    $sql = "INSERT INTO bills (registration_number, units_used, bill_amount, bill_date, month) VALUES (?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sidss", $registration_number, $units_used, $bill_amount, $bill_date, $month);
-
-    if ($stmt->execute()) {
-        $success = "Bill added successfully.";
-    } else {
-        $error = "Error: " . $stmt->error;
-    }
-}
-
 $result = $conn->query("SELECT registration_number FROM users");
 ?>
 
@@ -47,31 +21,12 @@ $result = $conn->query("SELECT registration_number FROM users");
         <a href="login.php" class="btn btn-secondary mb-3">Back</a>
         <a href="logout.php" class="btn btn-danger mb-3 float-end">Logout</a>
         <h1 class="text-center mb-4">Admin Dashboard</h1>
-        <?php if (isset($success)): ?>
-            <div class="alert alert-success"> <?= $success ?> </div>
-        <?php endif; ?>
-        <?php if (isset($error)): ?>
-            <div class="alert alert-danger"> <?= $error ?> </div>
-        <?php endif; ?>
-        <form method="POST" action="" class="mx-auto" style="max-width: 600px;">
-            <div class="mb-3">
-                <label for="registration_number" class="form-label">Select Registration Number</label>
-                <select id="registration_number" name="registration_number" class="form-select" required>
-                    <?php while ($row = $result->fetch_assoc()): ?>
-                        <option value="<?= $row['registration_number'] ?>"> <?= $row['registration_number'] ?> </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="units_used" class="form-label">Units Used</label>
-                <input type="number" id="units_used" name="units_used" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="month" class="form-label">Month</label>
-                <input type="text" id="month" name="month" class="form-control" placeholder="e.g., January 2026" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Add Bill</button>
-        </form>
+        <div class="list-group mx-auto" style="max-width: 600px;">
+            <a href="register.php" class="list-group-item list-group-item-action text-center py-5">
+                <h3>Register New User</h3>
+                <p>Add new users, administrators, or readers.</p>
+            </a>
+        </div>
     </div>
 </body>
 </html>

@@ -1,78 +1,63 @@
 <?php
-include 'db.php';
+function calculateBill($units_used, $connection_type) {
+    if ($units_used < 0) return ['total_amount' => 0, 'segments' => []];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $registration_number = $_POST['registration_number'];
-    $units_used = $_POST['units_used'];
+    $rates_map = [
+        'home' => [2, 4, 6],
+        'corporate' => [3, 6, 9],
+        'industrial' => [4, 8, 12],
+        'staff' => [1, 2, 3]
+    ];
+    
+    $rates = $rates_map[$connection_type] ?? $rates_map['home'];
+    
+    $bill_amount = 0;
+    $segments = [];
 
-    // Fetch user details
-    $sql = "SELECT * FROM users WHERE registration_number = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $registration_number);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-
-        // Calculate bill
-        $bill_amount = 0;
-        if ($units_used <= 50) {
-            $bill_amount = $units_used * 2;
-        } elseif ($units_used <= 100) {
-            $bill_amount = (50 * 2) + (($units_used - 50) * 4);
-        } else {
-            $bill_amount = (50 * 2) + (50 * 4) + (($units_used - 100) * 6);
-        }
-
-        // Insert bill into database
-        $bill_date = date('Y-m-d');
-        $insert_sql = "INSERT INTO bills (registration_number, units_used, bill_amount, bill_date) VALUES (?, ?, ?, ?)";
-        $insert_stmt = $conn->prepare($insert_sql);
-        $insert_stmt->bind_param("sids", $registration_number, $units_used, $bill_amount, $bill_date);
-        $insert_stmt->execute();
-
-        echo "<h1>Bill Details</h1>";
-        echo "<p>Name: " . $user['name'] . "</p>";
-        echo "<p>Registration Number: " . $user['registration_number'] . "</p>";
-        echo "<p>Address: " . $user['address'] . "</p>";
-        echo "<p>Units Used: " . $units_used . "</p>";
-        echo "<p>Bill Amount: Rs. " . $bill_amount . "</p>";
-        echo "<p>Bill Date: " . $bill_date . "</p>";
-
-        $insert_stmt->close();
-    } else {
-        echo "User not found!";
+    $tier1_units = min($units_used, 50);
+    if ($tier1_units > 0) {
+        $cost = $tier1_units * $rates[0];
+        $bill_amount += $cost;
+        $segments[] = [
+            'units' => $tier1_units,
+            'rate' => $rates[0],
+            'cost' => $cost,
+            'desc' => "First $tier1_units units @ {$rates[0]} Rs/unit"
+        ];
     }
 
-    $stmt->close();
-    $conn->close();
+    if ($units_used > 50) {
+        $tier2_units = min($units_used - 50, 50);
+        if ($tier2_units > 0) {
+            $cost = $tier2_units * $rates[1];
+            $bill_amount += $cost;
+            $segments[] = [
+                'units' => $tier2_units,
+                'rate' => $rates[1],
+                'cost' => $cost,
+                'desc' => "Next $tier2_units units @ {$rates[1]} Rs/unit"
+            ];
+        }
+    }
+
+    if ($units_used > 100) {
+        $tier3_units = $units_used - 100;
+        if ($tier3_units > 0) {
+            $cost = $tier3_units * $rates[2];
+            $bill_amount += $cost;
+            $segments[] = [
+                'units' => $tier3_units,
+                'rate' => $rates[2],
+                'cost' => $cost,
+                'desc' => "Remaining $tier3_units units @ {$rates[2]} Rs/unit"
+            ];
+        }
+    }
+
+    return [
+        'total_amount' => $bill_amount,
+        'segments' => $segments,
+        'rates' => $rates
+    ];
 }
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Calculate Bill</title>
-    <!-- Include Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container py-5">
-        <a href="login.php" class="btn btn-secondary mb-3">Back</a>
-        <a href="logout.php" class="btn btn-danger mb-3 float-end">Logout</a>
-        <h1 class="text-center mb-4">Calculate Electricity Bill</h1>
-        <form method="POST" action="" class="mx-auto" style="max-width: 600px;">
-            <div class="mb-3">
-                <label for="registration_number" class="form-label">Registration Number</label>
-                <input type="text" id="registration_number" name="registration_number" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="units_used" class="form-label">Units Used</label>
-                <input type="number" id="units_used" name="units_used" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-success w-100">Calculate Bill</button>
-        </form>
-    </div>
-</body>
-</html>
